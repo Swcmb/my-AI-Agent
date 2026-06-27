@@ -1,0 +1,9 @@
+services:
+  ai-agent:
+    build: .
+    container_name: my-ai-agent
+    stdin_open: true
+    tty: true
+    env_file:
+      - .env
+    restart: unless-stopped

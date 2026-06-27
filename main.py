@@ -7,15 +7,15 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 load_dotenv()
-import os
-# 请确保您已将 API Key 存储在环境变量 ARK_API_KEY 中
-# 初始化Openai客户端，从环境变量中读取您的API Key
+
+# 初始化 OpenAI 兼容客户端，支持自定义 API 端点
 claude_client = OpenAI(
-    # 此为默认路径，您可根据业务所在地域进行配置
     base_url=os.environ.get("AI_API_BASE", "https://ark.cn-beijing.volces.com/api/v3"),
-    # 从环境变量中获取您的 API Key
     api_key=os.environ.get("AI_API_KEY"),
 )
+
+# 可通过环境变量配置模型名称
+MODEL_NAME = os.environ.get("AI_MODEL_NAME", "gpt-3.5-turbo")
 
 YOU_COLOR = "\u001b[94m"
 ASSISTANT_COLOR = "\u001b[93m"
@@ -30,6 +30,7 @@ def resolve_abs_path(path_str: str) -> Path:
 
 
 def read_file_tool(filename: str) -> Dict[str, Any]:
+    """获取文件的全部内容。"""
     full_path = resolve_abs_path(filename)
     with open(str(full_path), "r") as f:
         content = f.read()
@@ -40,6 +41,7 @@ def read_file_tool(filename: str) -> Dict[str, Any]:
 
 
 def list_files_tool(path: str) -> Dict[str, Any]:
+    """列出目录中的文件和子目录。"""
     full_path = resolve_abs_path(path)
     all_files = []
     for item in full_path.iterdir():
@@ -54,6 +56,7 @@ def list_files_tool(path: str) -> Dict[str, Any]:
 
 
 def edit_file_tool(path: str, old_str: str, new_str: str) -> Dict[str, Any]:
+    """替换文件中的文本，old_str为空时创建新文件。"""
     full_path = resolve_abs_path(path)
     if old_str == "":
         full_path.write_text(new_str, encoding="utf-8")
@@ -134,9 +137,9 @@ def execute_llm_call(conversation: List[Dict[str, str]]):
         else:
             messages.append(msg)
 
-    # 使用 OpenAI 的调用方式，而非 Anthropic
+    # 调用 LLM API
     response = claude_client.chat.completions.create(
-        model="gpt-3.5-turbo",  # 或其他可用模型
+        model=MODEL_NAME,
         messages=[{"role": "system", "content": system_content}] + messages,
         max_tokens=2000
     )
